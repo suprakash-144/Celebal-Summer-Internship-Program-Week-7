@@ -1,16 +1,18 @@
 const express = require("express");
 const Product = require("../model/product");
+const chechklogintoken = require("../middleware/checkLoginToken");
+const isAdmin = require("../middleware/isAdmin");
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", chechklogintoken, async (req, res) => {
   try {
     const Products = await Product.find();
-    res.status(200).send(Products);
+    res.send(Products);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.send({ message: error.message });
   }
 });
-router.get("/:id", async (req, res) => {
+router.get("/:id", chechklogintoken, async (req, res) => {
   const id = req.params.id;
   try {
     const Product = await Product.findById(id);
@@ -19,37 +21,38 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-router.post("/", async (req, res) => {
+router.post("/", chechklogintoken, isAdmin, async (req, res) => {
   try {
-    const Product = await Product.create({
+    let Products = await Product.create({
       Name: req.body.Name,
       Quantity: req.body.Quantity,
       Brand: req.body.Brand,
       Price: req.body.Price,
     });
-    await Product.save();
-    res.status(201).send(Product);
+    await Products.save();
+    res.status(201).send(Products);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
-router.put("/:id", async (req, res) => {
+router.put("/:id", chechklogintoken, async (req, res) => {
   const id = req.params.id;
   try {
-    const Product = await Product.findByIdAndUpdate(id, req.body, {
+    let Products = await Product.findByIdAndUpdate(id, req.body, {
       new: true,
     });
-    res.status(201).send(Product);
+    res.status(201).send(Products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", chechklogintoken, async (req, res) => {
   const id = req.params.id;
   try {
-    const Product = await Product.findByIdAndDelete(id);
-    res.status(201).send(Product);
+    let product = await Product.findByIdAndDelete(id);
+    res.status(201).send(product);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+module.exports = router;
